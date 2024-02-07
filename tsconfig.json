@@ -1,0 +1,81 @@
+{
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/tests",
+    "docker"
+  ],
+  "include": [
+    "src/main/**/*"
+  ],
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    "lib": [
+      "es2022",
+      "dom"
+    ],
+    "moduleResolution": "node",
+    "declaration": true,
+    "moduleDetection": "force",
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "dist/esm",
+    "rootDir": "src/main",
+    "baseUrl": ".",
+    "strict": true,
+    "noImplicitAny": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "jest"
+    ],
+    "paths": {
+      "@root/*": [
+        "./*"
+      ],
+      "@src/*": [
+        "src/*"
+      ],
+      "@main/*": [
+        "src/main/*"
+      ],
+      "@resources/*": [
+        "src/resources/*"
+      ],
+      "@tests": [
+        "src/tests/*"
+      ]
+    },
+    "typeRoots": [
+      "node_modules/@types",
+      "src/main/types"
+    ],
+    "plugins": [
+      {
+        "transform": "typescript-transform-paths"
+      },
+      {
+        "transform": "typescript-transform-paths",
+        "afterDeclarations": true
+      }
+    ]
+  },
+  "tsc-alias": {
+    "verbose": true,
+    "resolveFullPaths": true,
+    "useTsconfig": true,
+    "outDir": "./dist",
+    "replacers": {},
+    "fileExtensions": {
+      "inputGlob": "{js,json,jsx,mjs,ts}",
+      "outputCheck": [
+        "js",
+        "json",
+        "jsx",
+        "mjs"
+      ]
+    }
+  }
+}

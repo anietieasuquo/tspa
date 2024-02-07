@@ -1,0 +1,8 @@
+# Windows files
+[*.bat]
+end_of_line = crlf
+
+[*.ts]
+ij_typescript_use_path_mapping = always
+ij_javascript_use_path_mapping = always
+ij_typescript_import_sort_members = true

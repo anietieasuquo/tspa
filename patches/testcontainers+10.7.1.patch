@@ -1,0 +1,13 @@
+diff --git a/node_modules/testcontainers/build/container-runtime/clients/compose/compose-client.js b/node_modules/testcontainers/build/container-runtime/clients/compose/compose-client.js
+index b9e6af9..134a50c 100644
+--- a/node_modules/testcontainers/build/container-runtime/clients/compose/compose-client.js
++++ b/node_modules/testcontainers/build/container-runtime/clients/compose/compose-client.js
+@@ -221,7 +221,7 @@ class MissingComposeClient {
+ }
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+ async function handleAndRethrow(err, handle) {
+-    const error = err instanceof Error ? err : new Error(err.err.trim());
++    const error = err instanceof Error ? err : new Error(JSON.stringify(err));
+     await handle(error);
+     throw error;
+ }
