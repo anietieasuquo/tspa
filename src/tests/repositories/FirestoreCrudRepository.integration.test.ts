@@ -1,3 +1,4 @@
+import { FirestoreEmulatorContainer, StartedFirestoreEmulatorContainer } from '@testcontainers/gcloud';
 import { commonUtils, FirestoreCrudRepository, logger, LogicalOperator, Optional } from '../../main';
 import { User } from '../types/test';
 import { DuplicateRecordException } from '../../main/exceptions/DuplicateRecordException';
@@ -7,29 +8,29 @@ import { OptimisticLockException } from '../../main/exceptions/OptimisticLockExc
 
 describe('FirestoreCrudRepository Integration Tests', () => {
   const projectId = 'typescript-persistence-api';
+  let container: StartedFirestoreEmulatorContainer;
   let firestoreCrudRepository: FirestoreCrudRepository<User>;
-  const cleanUp = async () => {
-    const result = await fetch(`http://localhost:8095/emulator/v1/projects/${projectId}/databases/(default)/documents`, { method: 'DELETE' });
-    logger.debug('Clean up result:', { isOk: result.ok, status: result.status });
-  };
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    container = await new FirestoreEmulatorContainer().start();
     firestoreCrudRepository = FirestoreCrudRepository.initFor<User>('user', {
       apiKey: 'apiKey',
       authDomain: 'authDomain',
       projectId,
-      appName: 'typescript-persistence-api'
+      appName: projectId,
+      emulatorEndpoint: container.getEmulatorEndpoint()
     });
   });
 
-  beforeEach(() => {
+  afterEach(async () => {
     if (process.env.JEST_DEBUG) {
       jest.setTimeout(100000000);
     }
+    await fetch(`http://${container.getEmulatorEndpoint()}/emulator/v1/projects/${projectId}/databases/(default)/documents`, { method: 'DELETE' });
   });
 
-  afterEach(async () => {
-    await cleanUp();
+  afterAll(async () => {
+    await container.stop();
   });
 
   const user: User = {
@@ -181,7 +182,6 @@ describe('FirestoreCrudRepository Integration Tests', () => {
 
   it('should find and return valid and sorted records when filter is provided', async () => {
     //GIVEN
-    const id = commonUtils.generate();
     const email = 'johndoe@gmail.com';
     const user: User = {
       deleted: false,
@@ -212,7 +212,6 @@ describe('FirestoreCrudRepository Integration Tests', () => {
 
   it('should find and return valid and sorted records when filter is provided using or logical operator', async () => {
     //GIVEN
-    const id = commonUtils.generate();
     const email = 'johndoe@gmail.com';
     const user: User = {
       deleted: false,

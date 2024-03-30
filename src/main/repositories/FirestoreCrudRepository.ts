@@ -97,7 +97,7 @@ class FirestoreCrudRepository<T extends Entity>
     const firebaseApiKey = apiKey || FIREBASE_API_KEY || '';
     const firebaseAuthDomain = authDomain || FIREBASE_AUTH_DOMAIN || '';
     const firebaseProjectId = projectId || FIREBASE_PROJECT_ID || '';
-    const firebaseAppName = projectId || APP_NAME || '';
+    const firebaseAppName = appName || APP_NAME || '';
 
     Objects.requireNonEmpty(
       [firebaseApiKey, firebaseAuthDomain, firebaseProjectId, firebaseAppName],
@@ -105,12 +105,17 @@ class FirestoreCrudRepository<T extends Entity>
     );
 
     FirestoreCrudRepository.connectionProperties = {
+      ...firebaseConnectionProperties,
       apiKey: firebaseApiKey,
       authDomain: firebaseAuthDomain,
       projectId: firebaseProjectId,
       appName: firebaseAppName
     };
     FirestoreCrudRepository.initialized = true;
+  }
+
+  public getDatabase(): any {
+    return this.database;
   }
 
   public createId(): string {
@@ -220,7 +225,7 @@ class FirestoreCrudRepository<T extends Entity>
 
     const batch = writeBatch(this.database);
 
-    const updated = payload.map(async (entity, index) => {
+    const updated = payload.map(async (entity) => {
       updatePayload(entity);
 
       if (commonUtils.isEmpty(entity.id)) {
@@ -343,7 +348,7 @@ class FirestoreCrudRepository<T extends Entity>
   private async performUpdate(
     record: T,
     payload: Partial<T>,
-    queryOptions?: QueryOptions<T> | undefined
+    _queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
     const collectionReference: CollectionReference<T> =
       this.getCollectionReference();
@@ -371,7 +376,7 @@ class FirestoreCrudRepository<T extends Entity>
 
   private async hardDelete(
     id: string,
-    queryOptions?: QueryOptions<T> | undefined
+    _queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
     const collectionReference: CollectionReference<T> =
       this.getCollectionReference();

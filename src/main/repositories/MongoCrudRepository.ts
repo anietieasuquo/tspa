@@ -121,6 +121,10 @@ class MongoCrudRepository<T extends EntityWithAdditionalId>
     MongoCrudRepository.initialized = true;
   }
 
+  public getDatabase(): any {
+    return mongoose.connection.db;
+  }
+
   public async create(
     payload: T,
     queryOptions?: QueryOptions<T> | undefined

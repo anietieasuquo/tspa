@@ -108,6 +108,8 @@ export interface CrudRepository<T extends Entity> {
   ): Promise<boolean>;
 
   createId(): string;
+
+  getDatabase(): any;
 }
 
 export type MongoSession = mongoose.mongo.ClientSession;
@@ -158,6 +160,7 @@ export interface FirestoreConnectionProperties extends ConnectionProperties {
   apiKey?: string;
   authDomain?: string;
   projectId?: string;
+  emulatorEndpoint?: string;
 }
 
 export interface MongoConnectionProperties<T extends EntityWithAdditionalId>

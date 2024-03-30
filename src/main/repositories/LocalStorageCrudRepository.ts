@@ -26,7 +26,7 @@ class LocalStorageCrudRepository<T extends Entity>
   private static localStorageConnectionProperties: LocalStorageConnectionProperties;
   private static initialized: boolean = false;
   private readonly storageKey: string;
-  private localStorage: Storage;
+  private readonly localStorage: Storage;
 
   private constructor(private readonly collectionName: string) {
     Objects.requireTrue(
@@ -45,6 +45,10 @@ class LocalStorageCrudRepository<T extends Entity>
     logger.info(
       'LocalStorageCrudRepository > LocalStorage has been successfully initialized'
     );
+  }
+
+  public getDatabase(): any {
+    return this.localStorage;
   }
 
   public static for<E extends Entity>(
@@ -284,7 +288,7 @@ class LocalStorageCrudRepository<T extends Entity>
   private async hardDelete(
     id: string,
     object: Object,
-    queryOptions?: QueryOptions<T> | undefined
+    _queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
     delete object[id];
     this.localStorage.setItem(this.storageKey, JSON.stringify(object));
@@ -294,7 +298,7 @@ class LocalStorageCrudRepository<T extends Entity>
   private async performUpdate(
     payload: T,
     object: Object,
-    queryOptions?: QueryOptions<T> | undefined
+    _queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
     updatePayload(payload);
     object[payload.id!] = payload;
