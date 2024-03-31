@@ -25,6 +25,7 @@
     "build:esm": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json --outDir dist/esm",
     "build:cjs": "tsc -p tsconfig-cjs.json && tsc-alias -p tsconfig-cjs.json --outDir dist/cjs",
     "clean:install": "rm -rf node_modules && yarn install",
+    "clean:install:ci": "rm -rf node_modules && yarn install --frozen-lockfile --production --force",
     "clean:build": "yarn run clean:install && yarn run build",
     "release": "npm publish --access public",
     "prepublishOnly": "yarn build",
