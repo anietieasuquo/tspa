@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "**" ]
     paths-ignore:
       - 'README.md'
   pull_request:
@@ -20,8 +20,16 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: [ ubuntu-22.04 ]
         node-version: [ 21.x ]
+        runner: [ ubuntu-22.04 ]
+        container-runtime: [ docker, docker-rootless, podman ]
+        include:
+          - container-runtime: docker
+            runner: ubuntu-22.04
+          - container-runtime: docker-rootless
+            runner: ubuntu-22.04
+          - container-runtime: podman
+            runner: ubuntu-22.04
     steps:
       - name: Code checkout
         uses: actions/checkout@v3
@@ -30,20 +38,40 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        run: yarn clean:install:ci
+        run: yarn run clean:install:ci
       - name: Build workspaces
         run: yarn run build -ws
-      - name: Run CommonJS module smoke test
-        run: node packages/testcontainers/smoke-test.js
-      - name: Run ES module smoke test
-        run: node packages/testcontainers/smoke-test.mjs
+      - name: Run smoke test
+        run: yarn run test:smoke
 
-  test-testcontainers:
-    name: Testcontainers
+  unit-test:
+    name: Unit test
+    needs: smoke-test
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        node-version: [ 21.x ]
+        runner: [ ubuntu-22.04 ]
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+      - name: Install NodeJS ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn run clean:install:ci
+      - name: Build workspaces
+        run: yarn run build -ws
+      - name: Run unit test
+        run: yarn run test:unit
+
+  integration-test:
+    name: Integration test
     needs: smoke-test
     strategy:
       matrix:
-        node-version: [ 18.x, 20.x ]
+        node-version: [ 21.x ]
         container-runtime: [ docker, docker-rootless, podman ]
         include:
           - container-runtime: docker
@@ -57,37 +85,4 @@ jobs:
       runner: ${{ matrix.runner }}
       node-version: ${{ matrix.node-version }}
       container-runtime: ${{ matrix.container-runtime }}
-      workspace: packages/testcontainers
-
-  list-modules:
-    name: List modules
-    runs-on: ubuntu-22.04
-    needs: test-testcontainers
-    outputs:
-      modules: ${{ steps.list_modules.outputs.modules }}
-    steps:
-      - uses: actions/checkout@v2
-      - id: list_modules
-        run: echo "modules=$(ls packages/modules | jq -cnR '[inputs | select(length>0)]'))" >> $GITHUB_OUTPUT
-
-  test-modules:
-    name: Module (${{ matrix.module }})
-    needs: [ test-testcontainers, list-modules ]
-    strategy:
-      matrix:
-        node-version: [ 18.x, 20.x ]
-        container-runtime: [ docker, docker-rootless, podman ]
-        include:
-          - container-runtime: docker
-            runner: ubuntu-22.04
-          - container-runtime: docker-rootless
-            runner: ubuntu-22.04
-          - container-runtime: podman
-            runner: ubuntu-22.04
-        module: ${{ fromJson(needs.list-modules.outputs.modules) }}
-    uses: ./.github/workflows/test-template.yml
-    with:
-      runner: ${{ matrix.runner }}
-      node-version: ${{ matrix.node-version }}
-      container-runtime: ${{ matrix.container-runtime }}
-      workspace: packages/modules/${{ matrix.module }}
+      workspace: ./

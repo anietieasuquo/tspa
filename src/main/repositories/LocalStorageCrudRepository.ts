@@ -3,13 +3,7 @@ import { LocalStorageProvider } from '@main/providers/LocalStorageProvider';
 import * as commonUtils from '@main/utils/common-utils';
 import * as entityUtils from '@main/utils/entity-utils';
 import { markAsDeleted, updatePayload } from '@main/utils/entity-utils';
-import {
-  CrudRepository,
-  Entity,
-  LocalStorageConnectionProperties,
-  Logger,
-  QueryOptions
-} from '@main/types/core';
+import { CrudRepository, Entity, LocalStorageConnectionProperties, Logger, QueryOptions } from '@main/types/core';
 import { DuplicateRecordException } from '@main/exceptions/DuplicateRecordException';
 import { RecordNotFoundException } from '@main/exceptions/RecordNotFoundException';
 import { OptimisticLockException } from '@main/exceptions/OptimisticLockException';
@@ -21,8 +15,7 @@ const STORAGE_PATH = process.env.TSPA_STORAGE_PATH;
 const logger: Logger = createDefaultInternalLogger();
 
 class LocalStorageCrudRepository<T extends Entity>
-  implements CrudRepository<T>
-{
+  implements CrudRepository<T> {
   private static localStorageConnectionProperties: LocalStorageConnectionProperties;
   private static initialized: boolean = false;
   private readonly storageKey: string;
@@ -90,7 +83,7 @@ class LocalStorageCrudRepository<T extends Entity>
   }
 
   public async findById(id: string): Promise<Optional<T>> {
-    logger.debug(`LocalStorageCrudRepository findById filter: ${id}`);
+    logger.debug(`LocalStorageCrudRepository findById: ${id}`);
 
     const jsonString = this.localStorage.getItem(this.storageKey);
 
@@ -102,7 +95,7 @@ class LocalStorageCrudRepository<T extends Entity>
     }
 
     const jsonValue = JSON.parse(jsonString);
-    const content = jsonValue[id];
+    const content = jsonValue[this.getActiveKey(id)];
 
     logger.debug(
       'LocalStorageCrudRepository findById -> found record',
@@ -113,7 +106,7 @@ class LocalStorageCrudRepository<T extends Entity>
 
   public async findOneBy(
     filter: Partial<T>,
-    queryOptions?: QueryOptions<T> | undefined
+    _queryOptions?: QueryOptions<T> | undefined
   ): Promise<Optional<T>> {
     logger.debug(
       `LocalStorageCrudRepository findOneBy filter: ${JSON.stringify(filter)}`
@@ -130,6 +123,9 @@ class LocalStorageCrudRepository<T extends Entity>
 
     Object.keys(jsonValue).forEach((recordKey) => {
       const item = jsonValue[recordKey];
+      if (item.deleted) {
+        return;
+      }
 
       // @ts-ignore
       if (Object.keys(item).some((key) => item[key] === filter[key])) {
@@ -141,8 +137,8 @@ class LocalStorageCrudRepository<T extends Entity>
   }
 
   public async findAll(
-    filter?: Partial<T>,
-    queryOptions?: QueryOptions<T> | undefined
+    filter: Partial<T> = {},
+    _queryOptions?: QueryOptions<T> | undefined
   ): Promise<T[]> {
     logger.debug(
       `LocalStorageCrudRepository findAll filter: ${JSON.stringify(filter)}`
@@ -156,13 +152,6 @@ class LocalStorageCrudRepository<T extends Entity>
     const jsonValue = JSON.parse(jsonString);
 
     const items: T[] = [];
-    if (!filter) {
-      Object.keys(jsonValue).forEach((recordKey) => {
-        items.push(jsonValue[recordKey] as T);
-      });
-
-      return items;
-    }
 
     Object.keys(filter).forEach((key) => {
       // @ts-ignore
@@ -170,6 +159,9 @@ class LocalStorageCrudRepository<T extends Entity>
 
       Object.keys(jsonValue).forEach((recordKey) => {
         const item = jsonValue[recordKey];
+        if (item.deleted) {
+          return;
+        }
 
         if (Object.keys(item).includes(key) && item[key] === value) {
           items.push(item as T);
@@ -194,19 +186,18 @@ class LocalStorageCrudRepository<T extends Entity>
 
     updatePayload(payload);
 
-    // @ts-ignore
-    object[id] = { ...payload, id };
+    const item: T = { ...payload, id };
+    const activeKey = this.getActiveKey(id);
 
-    logger.debug('LocalStorageCrudRepository saving new record', object[id]);
-
+    object[activeKey] = item;
     this.localStorage.setItem(this.storageKey, JSON.stringify(object));
 
     logger.debug(
       `LocalStorageCrudRepository created entity for ${this.collectionName}`,
-      object[id]
+      item
     );
 
-    return object[id] as T;
+    return item;
   }
 
   public async createAll(payload: T[]): Promise<T[]> {
@@ -222,8 +213,8 @@ class LocalStorageCrudRepository<T extends Entity>
     );
     entityUtils.checkForDuplicates<T>(entitiesWithIds, ['id']);
 
-    const all = payload.flatMap(async (p) => {
-      return await this.create(p);
+    const all: Promise<T>[] = payload.flatMap(async (record: T) => {
+      return await this.create(record);
     });
 
     const records = await Promise.all(all);
@@ -240,8 +231,9 @@ class LocalStorageCrudRepository<T extends Entity>
       `LocalStorageCrudRepository update id: ${id} payload: ${JSON.stringify(payload)}`
     );
 
-    const object = await this.findExpectedRecord(id);
-    const record: T = object[id] as T;
+    const activeKey = this.getActiveKey(id);
+    const object = await this.findExpectedRecord(activeKey);
+    const record: T = object[activeKey] as T;
 
     if (
       queryOptions?.locking === 'optimistic' &&
@@ -262,12 +254,13 @@ class LocalStorageCrudRepository<T extends Entity>
   ): Promise<boolean> {
     logger.debug(`LocalStorageCrudRepository remove id: ${id}`);
 
-    const object = await this.findExpectedRecord(id);
-    const record: T = object[id] as T;
+    const activeKey = this.getActiveKey(id);
+    const object = await this.findExpectedRecord(activeKey);
+    const record: T = object[activeKey] as T;
     if (queryOptions.deletionOptions?.softDelete) {
       return this.softDelete(record, object);
     }
-    return this.hardDelete(id, object);
+    return this.hardDelete(activeKey, object);
   }
 
   private async getId(payload: T): Promise<string> {
@@ -279,10 +272,15 @@ class LocalStorageCrudRepository<T extends Entity>
   private async softDelete(
     record: T,
     object: Object,
-    queryOptions?: QueryOptions<T> | undefined
+    _queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
+    delete object[this.getActiveKey(record.id!)];
+
     markAsDeleted(record);
-    return this.performUpdate(record, object, queryOptions);
+    updatePayload(record);
+    object[this.getInactiveKey(record.id!)] = record;
+    this.localStorage.setItem(this.storageKey, JSON.stringify(object));
+    return true;
   }
 
   private async hardDelete(
@@ -301,7 +299,8 @@ class LocalStorageCrudRepository<T extends Entity>
     _queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
     updatePayload(payload);
-    object[payload.id!] = payload;
+    const activeKey = this.getActiveKey(payload.id!);
+    object[activeKey] = payload;
     this.localStorage.setItem(this.storageKey, JSON.stringify(object));
     return true;
   }
@@ -339,6 +338,14 @@ class LocalStorageCrudRepository<T extends Entity>
       );
     }
     return object;
+  }
+
+  private getActiveKey(id: string): string {
+    return `${id}:false`;
+  }
+
+  private getInactiveKey(id: string): string {
+    return `${id}:true`;
   }
 }
 
