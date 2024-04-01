@@ -84,7 +84,7 @@
   },
   "dependencies": {
     "callsite": "1.0.0",
-    "firebase": "10.8.0",
+    "firebase": "10.10.0",
     "mongoose": "8.1.1",
     "node-localstorage": "3.0.5",
     "postinstall-postinstall": "2.1.0"
