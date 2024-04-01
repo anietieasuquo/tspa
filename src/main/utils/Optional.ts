@@ -1,4 +1,5 @@
 import { Objects } from '@src/main';
+import { Nullable } from '@main/types/core';
 
 class Optional<T> {
   private static readonly EMPTY: Optional<any> = new Optional<any>(null);
@@ -13,7 +14,7 @@ class Optional<T> {
     return new Optional(value);
   }
 
-  public static ofNullable<T>(value: T | null | undefined): Optional<T> {
+  public static ofNullable<T>(value: Nullable<T>): Optional<T> {
     return value === undefined || value == null
       ? (this.EMPTY as Optional<T>)
       : new Optional<T>(value);
@@ -29,7 +30,7 @@ class Optional<T> {
 
   public get(): T {
     Objects.requireNonNull(this.value, 'Value is not present');
-    return this.value!;
+    return this.value;
   }
 
   public isEmpty(): boolean {
@@ -101,7 +102,7 @@ class Optional<T> {
     return this.isPresent() ? this.value! : defaultValue;
   }
 
-  public or(supplier: <T>() => Optional<T>): Optional<T> {
+  public or(supplier: () => Optional<T>): Optional<T> {
     Objects.requireNonNull(supplier, 'Supplier cannot be null');
     if (this.isPresent()) {
       return this;

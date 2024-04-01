@@ -13,7 +13,7 @@ import { createDefaultInternalLogger } from '@main/utils/logger-utils';
 const ENVIRONMENT =
   process.env.TSPA_ENVIRONMENT === 'dev' ? 'tspa-dev' : 'tspa';
 const FIRESTORE_EMULATOR_HOST =
-  process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8095';
+  process.env.FIRESTORE_EMULATOR_HOST ?? 'localhost:8095';
 const logger: Logger = createDefaultInternalLogger();
 
 class FirestoreProvider {
@@ -37,7 +37,7 @@ class FirestoreProvider {
     this.auth = getAuth(app);
 
     if (ENVIRONMENT === 'tspa-dev') {
-      const emulatorUrl = emulatorEndpoint || FIRESTORE_EMULATOR_HOST;
+      const emulatorUrl = emulatorEndpoint ?? FIRESTORE_EMULATOR_HOST;
       logger.debug('Connecting to Firestore emulator at', emulatorUrl);
       const firestoreEmulatorHost = emulatorUrl.split(':')[0];
       const firestoreEmulatorPort = parseInt(emulatorUrl.split(':')[1]);
@@ -48,12 +48,7 @@ class FirestoreProvider {
       );
     }
 
-    if (
-      !this.firestore ||
-      !this.firestore.app ||
-      !this.auth ||
-      !this.auth.app
-    ) {
+    if (!this.firestore?.app || !this.auth?.app) {
       throw new InternalServerException(
         'Failed to initialize Firestore provider'
       );
@@ -64,7 +59,7 @@ class FirestoreProvider {
     firebaseConnectionProperties: FirestoreConnectionProperties
   ): FirestoreProvider {
     return (
-      this.instance || (this.instance = new this(firebaseConnectionProperties))
+      this.instance ?? (this.instance = new this(firebaseConnectionProperties))
     );
   }
 }

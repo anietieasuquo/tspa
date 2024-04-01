@@ -1,5 +1,5 @@
 console.log('Creating replica set...');
-var config = {
+const config = {
   '_id': 'tspa-rs',
   'version': 1,
   'members': [

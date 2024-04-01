@@ -87,8 +87,8 @@ class MongoCrudRepository<T extends EntityWithAdditionalId>
   ): void {
     const { entities, uri, connectionOptions, appName } =
       mongoConnectionProperties;
-    const mongodbUri = uri || MONGO_URI || '';
-    const mongoAppName = appName || APP_NAME || '';
+    const mongodbUri = uri ?? MONGO_URI ?? '';
+    const mongoAppName = appName ?? APP_NAME ?? '';
     if (
       commonUtils.isAnyEmpty(mongodbUri, mongoAppName) &&
       mongoose.connection.readyState === 0
@@ -384,7 +384,7 @@ class MongoCrudRepository<T extends EntityWithAdditionalId>
       }).sort({
         deleted: -1,
         dateCreated: -1
-      })) || [];
+      })) ?? [];
     logger.debug(
       `MongoCrudRepository _findAll: ${records.length} records found`
     );
@@ -405,7 +405,7 @@ class MongoCrudRepository<T extends EntityWithAdditionalId>
     const records =
       (await EntityModel.find(filterQuery, null, {
         session: queryOptions?.mongoOptions?.session
-      }).sort({ dateCreated: -1 })) || [];
+      }).sort({ dateCreated: -1 })) ?? [];
     logger.debug(`MongoCrudRepository findBy: ${records.length} records found`);
     return records.map((record) => this.getDocument(record));
   }
@@ -415,7 +415,7 @@ class MongoCrudRepository<T extends EntityWithAdditionalId>
       deleted: { $ne: true }
     };
     for (const key in filter) {
-      if (Object.prototype.hasOwnProperty.call(filter, key)) {
+      if (Object.hasOwn(filter, key)) {
         filterQuery = {
           ...filterQuery,
           [key]: { $eq: filter[key], $exists: true }
@@ -430,14 +430,13 @@ class MongoCrudRepository<T extends EntityWithAdditionalId>
     queryOptions?: QueryOptions<T> | undefined
   ): FilterQuery<T> {
     if (
-      !queryOptions ||
-      !queryOptions.logicalOperator ||
+      !queryOptions?.logicalOperator ||
       queryOptions.logicalOperator === LogicalOperator.AND
     ) {
       return this.createFilterOnly(filter);
     }
 
-    let deletedQuery: FilterQuery<T> = {
+    const deletedQuery: FilterQuery<T> = {
       deleted: { $ne: true }
     };
 
@@ -446,7 +445,7 @@ class MongoCrudRepository<T extends EntityWithAdditionalId>
       .toLowerCase();
     const filterQuery: FilterQuery<T>[] = [];
     for (const key in filter) {
-      if (Object.prototype.hasOwnProperty.call(filter, key)) {
+      if (Object.hasOwn(filter, key)) {
         const fieldQuery: FilterQuery<T> = {
           [key]: { $eq: filter[key], $exists: true }
         } as FilterQuery<T>;

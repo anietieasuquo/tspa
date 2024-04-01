@@ -49,7 +49,7 @@ export interface QueryOptions<T extends Entity> {
   offset?: number;
   sortBy?: { [key in keyof T]: SortOrder };
   locking?: Locking;
-  mongoOptions?: MongoQueryOptions | undefined;
+  mongoOptions?: MongoQueryOptions;
 }
 
 export interface EntityWithAdditionalId extends Entity {
@@ -173,3 +173,5 @@ export interface MongoConnectionProperties<T extends EntityWithAdditionalId>
 export interface LocalStorageConnectionProperties extends ConnectionProperties {
   storagePath?: string;
 }
+
+export type Nullable<T> = T | null | undefined;

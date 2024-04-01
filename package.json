@@ -35,8 +35,9 @@
     "test:integration:firestore": "export $(cat .env | xargs) && jest -t \"FirestoreCrudRepository Integration Tests\"  --testTimeout=100000000 --detectOpenHandles",
     "test:smoke": "export $(cat .env | xargs) && jest -t \"Smoke Test\"  --testTimeout=100000000 --detectOpenHandles",
     "test": "TSPA_LOG_LEVEL=trace DEBUG=testcontainers:containers TSPA_ENVIRONMENT=dev jest --testTimeout=100000000 --coverage",
-    "lint:eslint:ci": "eslint package.json \"**/*.ts\" --max-warnings=0 --ext .ts --ext .js",
-    "lint:prettier:ci": "prettier --check package.json \"**/*.ts\" --ext .ts --ext .js",
+    "lint:eslint:ci": "eslint src/main --max-warnings=0 --ext .ts --ext .js",
+    "lint:prettier:ci": "prettier --check src/main",
+    "lint:prettier:ci:fix": "prettier --write src/main",
     "lint:ci": "yarn run lint:eslint:ci && yarn run lint:prettier:ci",
     "pre-commit": "lint-staged"
   },

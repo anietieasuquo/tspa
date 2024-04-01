@@ -89,15 +89,15 @@ class FirestoreCrudRepository<T extends Entity>
     return new FirestoreCrudRepository<E>(collectionName);
   }
 
-  public static init<E extends Entity>(
+  public static init(
     firebaseConnectionProperties: FirestoreConnectionProperties
   ): void {
     const { apiKey, authDomain, projectId, appName } =
       firebaseConnectionProperties;
-    const firebaseApiKey = apiKey || FIREBASE_API_KEY || '';
-    const firebaseAuthDomain = authDomain || FIREBASE_AUTH_DOMAIN || '';
-    const firebaseProjectId = projectId || FIREBASE_PROJECT_ID || '';
-    const firebaseAppName = appName || APP_NAME || '';
+    const firebaseApiKey = apiKey ?? FIREBASE_API_KEY ?? '';
+    const firebaseAuthDomain = authDomain ?? FIREBASE_AUTH_DOMAIN ?? '';
+    const firebaseProjectId = projectId ?? FIREBASE_PROJECT_ID ?? '';
+    const firebaseAppName = appName ?? APP_NAME ?? '';
 
     Objects.requireNonEmpty(
       [firebaseApiKey, firebaseAuthDomain, firebaseProjectId, firebaseAppName],
@@ -294,7 +294,7 @@ class FirestoreCrudRepository<T extends Entity>
           !snapshot.metadata.hasPendingWrites
         ) {
           const data: QueryDocumentSnapshot<T> | undefined = snapshot.docs.find(
-            (doc) => doc.id === id
+            (document) => document.id === id
           );
           if (data) {
             listener(data.data());
@@ -331,7 +331,6 @@ class FirestoreCrudRepository<T extends Entity>
             logger.debug(
               `Firebase Listener: ${this.collectionName}, change: ${change.type}`
             );
-            return;
           });
         }
       },
@@ -348,10 +347,12 @@ class FirestoreCrudRepository<T extends Entity>
   private async performUpdate(
     record: T,
     payload: Partial<T>,
-    _queryOptions?: QueryOptions<T> | undefined
+    queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
     const collectionReference: CollectionReference<T> =
       this.getCollectionReference();
+
+    logger.debug('Updating record with filter', queryOptions);
 
     const documentReference: DocumentReference<T> = doc(
       collectionReference,
@@ -376,10 +377,12 @@ class FirestoreCrudRepository<T extends Entity>
 
   private async hardDelete(
     id: string,
-    _queryOptions?: QueryOptions<T> | undefined
+    queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
     const collectionReference: CollectionReference<T> =
       this.getCollectionReference();
+
+    logger.debug('Deleting record with filter', queryOptions);
     await deleteDoc(doc(collectionReference, id));
     return true;
   }
@@ -458,8 +461,7 @@ class FirestoreCrudRepository<T extends Entity>
       true
     );
     if (
-      !queryOptions ||
-      !queryOptions.logicalOperator ||
+      !queryOptions?.logicalOperator ||
       queryOptions.logicalOperator === LogicalOperator.AND
     ) {
       mainQuery = query(mainQuery, deletionConstraint, ...filterArray);

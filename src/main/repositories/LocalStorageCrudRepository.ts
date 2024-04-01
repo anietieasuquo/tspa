@@ -3,7 +3,13 @@ import { LocalStorageProvider } from '@main/providers/LocalStorageProvider';
 import * as commonUtils from '@main/utils/common-utils';
 import * as entityUtils from '@main/utils/entity-utils';
 import { markAsDeleted, updatePayload } from '@main/utils/entity-utils';
-import { CrudRepository, Entity, LocalStorageConnectionProperties, Logger, QueryOptions } from '@main/types/core';
+import {
+  CrudRepository,
+  Entity,
+  LocalStorageConnectionProperties,
+  Logger,
+  QueryOptions
+} from '@main/types/core';
 import { DuplicateRecordException } from '@main/exceptions/DuplicateRecordException';
 import { RecordNotFoundException } from '@main/exceptions/RecordNotFoundException';
 import { OptimisticLockException } from '@main/exceptions/OptimisticLockException';
@@ -15,7 +21,8 @@ const STORAGE_PATH = process.env.TSPA_STORAGE_PATH;
 const logger: Logger = createDefaultInternalLogger();
 
 class LocalStorageCrudRepository<T extends Entity>
-  implements CrudRepository<T> {
+  implements CrudRepository<T>
+{
   private static localStorageConnectionProperties: LocalStorageConnectionProperties;
   private static initialized: boolean = false;
   private readonly storageKey: string;
@@ -58,12 +65,12 @@ class LocalStorageCrudRepository<T extends Entity>
     return new LocalStorageCrudRepository<E>(collectionName);
   }
 
-  public static async init<E extends Entity>(
+  public static async init(
     localStorageConnectionProperties: LocalStorageConnectionProperties
   ): Promise<void> {
     const { appName, storagePath } = localStorageConnectionProperties;
-    const name = appName || APP_NAME || 'app';
-    const path = storagePath || STORAGE_PATH || './db';
+    const name = appName ?? APP_NAME ?? 'app';
+    const path = storagePath ?? STORAGE_PATH ?? './db';
     Objects.requireNonEmpty(
       [name, path],
       new ConfigurationException('Invalid initialization parameters')
@@ -106,10 +113,11 @@ class LocalStorageCrudRepository<T extends Entity>
 
   public async findOneBy(
     filter: Partial<T>,
-    _queryOptions?: QueryOptions<T> | undefined
+    queryOptions?: QueryOptions<T> | undefined
   ): Promise<Optional<T>> {
     logger.debug(
-      `LocalStorageCrudRepository findOneBy filter: ${JSON.stringify(filter)}`
+      `LocalStorageCrudRepository findOneBy filter: ${JSON.stringify(filter)}`,
+      queryOptions
     );
 
     const jsonString = this.localStorage.getItem(this.storageKey);
@@ -138,10 +146,11 @@ class LocalStorageCrudRepository<T extends Entity>
 
   public async findAll(
     filter: Partial<T> = {},
-    _queryOptions?: QueryOptions<T> | undefined
+    queryOptions?: QueryOptions<T> | undefined
   ): Promise<T[]> {
     logger.debug(
-      `LocalStorageCrudRepository findAll filter: ${JSON.stringify(filter)}`
+      `LocalStorageCrudRepository findAll filter: ${JSON.stringify(filter)}`,
+      queryOptions
     );
 
     const jsonString = this.localStorage.getItem(this.storageKey);
@@ -271,9 +280,10 @@ class LocalStorageCrudRepository<T extends Entity>
 
   private async softDelete(
     record: T,
-    object: Object,
-    _queryOptions?: QueryOptions<T> | undefined
+    object: object,
+    queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
+    logger.debug('LocalStorageCrudRepository softDelete options', queryOptions);
     delete object[this.getActiveKey(record.id!)];
 
     markAsDeleted(record);
@@ -285,9 +295,10 @@ class LocalStorageCrudRepository<T extends Entity>
 
   private async hardDelete(
     id: string,
-    object: Object,
-    _queryOptions?: QueryOptions<T> | undefined
+    object: object,
+    queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
+    logger.debug('LocalStorageCrudRepository hardDelete options', queryOptions);
     delete object[id];
     this.localStorage.setItem(this.storageKey, JSON.stringify(object));
     return true;
@@ -295,9 +306,11 @@ class LocalStorageCrudRepository<T extends Entity>
 
   private async performUpdate(
     payload: T,
-    object: Object,
-    _queryOptions?: QueryOptions<T> | undefined
+    object: object,
+    queryOptions?: QueryOptions<T> | undefined
   ): Promise<boolean> {
+    logger.debug('LocalStorageCrudRepository update options', queryOptions);
+
     updatePayload(payload);
     const activeKey = this.getActiveKey(payload.id!);
     object[activeKey] = payload;
@@ -318,7 +331,7 @@ class LocalStorageCrudRepository<T extends Entity>
     return id;
   }
 
-  private async findExpectedRecord(id: string): Promise<Object> {
+  private async findExpectedRecord(id: string): Promise<object> {
     const jsonString = this.localStorage.getItem(this.storageKey);
     Objects.requireNonEmpty(
       jsonString,
