@@ -139,4 +139,4 @@ jobs:
         run: yarn run clean:install:ci
 
       - name: Run tests
-        run: yarn test -- ${{ inputs.workspace }}
+        run: yarn run test:integration:ci -- ${{ inputs.workspace }}
