@@ -1,4 +1,4 @@
-import { commonUtils, LocalStorageCrudRepository, Optional } from '../../main';
+import { commonUtils, LocalStorageCrudRepository, logger, Optional } from '../../main';
 import { User } from '../types/test';
 import { LocalStorageProvider } from '../../main/providers/LocalStorageProvider';
 import { DuplicateRecordException } from '../../main/exceptions/DuplicateRecordException';
@@ -30,6 +30,9 @@ describe('LocalStorageCrudRepository', () => {
       setItem: mockCreateItem
     }
   };
+  const getActiveKey = (id: string): string => {
+    return `${id}:false`;
+  };
 
   beforeEach(async () => {
     localStorageCrudRepository = await LocalStorageCrudRepository.initFor<User>('user', {
@@ -56,7 +59,7 @@ describe('LocalStorageCrudRepository', () => {
     const id = commonUtils.generate();
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: { ...user, id } }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: { ...user, id } }));
     mockCreateItem.mockReturnValue(null);
 
     //THEN
@@ -112,7 +115,7 @@ describe('LocalStorageCrudRepository', () => {
     const id = commonUtils.generate();
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: { ...user, id } }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: { ...user, id } }));
     const found: Optional<User> = await localStorageCrudRepository.findById('record-id');
 
     //THEN
@@ -124,7 +127,7 @@ describe('LocalStorageCrudRepository', () => {
     const id = commonUtils.generate();
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: { ...user, id } }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: { ...user, id } }));
     const optional: Optional<User> = await localStorageCrudRepository.findById(id);
 
     //THEN
@@ -153,7 +156,7 @@ describe('LocalStorageCrudRepository', () => {
     const id = commonUtils.generate();
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: user }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: user }));
     const found: Optional<User> = await localStorageCrudRepository.findOneBy({ 'email': 'test' });
 
     //THEN
@@ -166,7 +169,7 @@ describe('LocalStorageCrudRepository', () => {
     const email = 'johndoe@gmail.com';
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: { ...user, id } }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: { ...user, id } }));
     const optional: Optional<User> = await localStorageCrudRepository.findOneBy({ email });
 
     //THEN
@@ -194,7 +197,7 @@ describe('LocalStorageCrudRepository', () => {
     const id = commonUtils.generate();
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: user }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: user }));
     const found = await localStorageCrudRepository.findAll({ 'email': 'test' });
 
     //THEN
@@ -206,7 +209,7 @@ describe('LocalStorageCrudRepository', () => {
     const id = commonUtils.generate();
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: user }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: user }));
     const found = await localStorageCrudRepository.findAll({ 'email': user.email });
 
     //THEN
@@ -268,7 +271,7 @@ describe('LocalStorageCrudRepository', () => {
     const email = 'test';
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: user }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: user }));
     mockCreateItem.mockReturnValue(null);
     const result = await localStorageCrudRepository.update(id, { ...user, email });
 
@@ -295,10 +298,9 @@ describe('LocalStorageCrudRepository', () => {
   it('should delete record', async () => {
     //GIVEN
     const id = commonUtils.generate();
-    const email = 'test';
 
     //WHEN
-    mockGetItem.mockReturnValue(JSON.stringify({ [id]: user }));
+    mockGetItem.mockReturnValue(JSON.stringify({ [getActiveKey(id)]: { ...user, id } }));
     mockCreateItem.mockReturnValue(null);
     const result = await localStorageCrudRepository.remove(id);
 

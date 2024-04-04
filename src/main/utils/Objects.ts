@@ -1,18 +1,19 @@
 import * as commonUtils from '@main/utils/common-utils';
+import { Nullable } from '@main/types/core';
 
 class Objects {
   public static requireNonNull<T, E extends Error>(
-    args: T | null | undefined,
+    args: Nullable<T>,
     error: string | E
   ): asserts args is NonNullable<T>;
 
   public static requireNonNull<T, E extends Error>(
-    args: (T | null | undefined)[],
+    args: Nullable<T>[],
     error: string | E
   ): asserts args is NonNullable<T>[];
 
   public static requireNonNull<T, E extends Error>(
-    args: (T | null | undefined)[] | (T | null | undefined),
+    args: Nullable<T>[] | Nullable<T>,
     error: string | E
   ): asserts args is NonNullable<T>[] | NonNullable<T> {
     if (Array.isArray(args)) {
@@ -28,17 +29,17 @@ class Objects {
   }
 
   public static requireNonEmpty<T, E extends Error>(
-    args: T | null | undefined,
+    args: Nullable<T>,
     error: string | E
   ): asserts args is NonNullable<T>;
 
   public static requireNonEmpty<T, E extends Error>(
-    args: (T | null | undefined)[],
+    args: Nullable<T>[],
     error: string | E
   ): asserts args is NonNullable<T>[];
 
   public static requireNonEmpty<T, E extends Error>(
-    args: (T | null | undefined)[] | (T | null | undefined),
+    args: Nullable<T>[] | Nullable<T>,
     error: string | E
   ): asserts args is NonNullable<T>[] | NonNullable<T> {
     this.requireNonNull(args, error);
@@ -55,17 +56,17 @@ class Objects {
   }
 
   public static requireTrue<E extends Error>(
-    args: boolean | null | undefined,
+    args: Nullable<boolean>,
     error: string | E
   ): asserts args is true;
 
   public static requireTrue<E extends Error>(
-    args: (boolean | null | undefined)[],
+    args: Nullable<boolean>[],
     error: string | E
   ): asserts args is true[];
 
   public static requireTrue<E extends Error>(
-    args: (boolean | null | undefined)[] | (boolean | null | undefined),
+    args: Nullable<boolean>[] | Nullable<boolean>,
     error: string | E
   ): asserts args is true[] | true {
     this.requireNonNull(args, error);

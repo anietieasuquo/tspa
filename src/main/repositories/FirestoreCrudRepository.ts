@@ -89,15 +89,15 @@ class FirestoreCrudRepository<T extends Entity>
     return new FirestoreCrudRepository<E>(collectionName);
   }
 
-  public static init<E extends Entity>(
+  public static init(
     firebaseConnectionProperties: FirestoreConnectionProperties
   ): void {
     const { apiKey, authDomain, projectId, appName } =
       firebaseConnectionProperties;
-    const firebaseApiKey = apiKey || FIREBASE_API_KEY || '';
-    const firebaseAuthDomain = authDomain || FIREBASE_AUTH_DOMAIN || '';
-    const firebaseProjectId = projectId || FIREBASE_PROJECT_ID || '';
-    const firebaseAppName = projectId || APP_NAME || '';
+    const firebaseApiKey = apiKey ?? FIREBASE_API_KEY ?? '';
+    const firebaseAuthDomain = authDomain ?? FIREBASE_AUTH_DOMAIN ?? '';
+    const firebaseProjectId = projectId ?? FIREBASE_PROJECT_ID ?? '';
+    const firebaseAppName = appName ?? APP_NAME ?? '';
 
     Objects.requireNonEmpty(
       [firebaseApiKey, firebaseAuthDomain, firebaseProjectId, firebaseAppName],
@@ -105,12 +105,17 @@ class FirestoreCrudRepository<T extends Entity>
     );
 
     FirestoreCrudRepository.connectionProperties = {
+      ...firebaseConnectionProperties,
       apiKey: firebaseApiKey,
       authDomain: firebaseAuthDomain,
       projectId: firebaseProjectId,
       appName: firebaseAppName
     };
     FirestoreCrudRepository.initialized = true;
+  }
+
+  public getDatabase(): any {
+    return this.database;
   }
 
   public createId(): string {
@@ -220,7 +225,7 @@ class FirestoreCrudRepository<T extends Entity>
 
     const batch = writeBatch(this.database);
 
-    const updated = payload.map(async (entity, index) => {
+    const updated = payload.map(async (entity) => {
       updatePayload(entity);
 
       if (commonUtils.isEmpty(entity.id)) {
@@ -289,7 +294,7 @@ class FirestoreCrudRepository<T extends Entity>
           !snapshot.metadata.hasPendingWrites
         ) {
           const data: QueryDocumentSnapshot<T> | undefined = snapshot.docs.find(
-            (doc) => doc.id === id
+            (document) => document.id === id
           );
           if (data) {
             listener(data.data());
@@ -326,7 +331,6 @@ class FirestoreCrudRepository<T extends Entity>
             logger.debug(
               `Firebase Listener: ${this.collectionName}, change: ${change.type}`
             );
-            return;
           });
         }
       },
@@ -347,6 +351,8 @@ class FirestoreCrudRepository<T extends Entity>
   ): Promise<boolean> {
     const collectionReference: CollectionReference<T> =
       this.getCollectionReference();
+
+    logger.debug('Updating record with filter', queryOptions);
 
     const documentReference: DocumentReference<T> = doc(
       collectionReference,
@@ -375,6 +381,8 @@ class FirestoreCrudRepository<T extends Entity>
   ): Promise<boolean> {
     const collectionReference: CollectionReference<T> =
       this.getCollectionReference();
+
+    logger.debug('Deleting record with filter', queryOptions);
     await deleteDoc(doc(collectionReference, id));
     return true;
   }
@@ -453,8 +461,7 @@ class FirestoreCrudRepository<T extends Entity>
       true
     );
     if (
-      !queryOptions ||
-      !queryOptions.logicalOperator ||
+      !queryOptions?.logicalOperator ||
       queryOptions.logicalOperator === LogicalOperator.AND
     ) {
       mainQuery = query(mainQuery, deletionConstraint, ...filterArray);

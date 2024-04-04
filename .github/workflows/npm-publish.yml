@@ -1,0 +1,57 @@
+name: Node.js Package
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 21
+      - run: yarn run clean:install:ci
+      - run: yarn run build:ci
+      - run: yarn test
+
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 21
+          registry-url: https://registry.npmjs.org/
+
+      - name: Configure Git
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Update versions
+        run: |
+          npm version ${{ github.event.release.tag_name }} -ws --allow-same-version
+          sed -i -E "s/(sonar.projectVersion)=.+/\1=${{ github.event.release.tag_name }}/" sonar-project.properties
+
+      - name: Build packages
+        run: |
+          yarn run clean:install:ci
+          yarn run build:ci
+
+      - name: Git commit and push
+        run: |
+          git commit -am "${{ github.event.release.tag_name }}"
+          git push
+
+      - name: Publish packages to NPM
+        run: npm publish -ws
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.npm_token }}

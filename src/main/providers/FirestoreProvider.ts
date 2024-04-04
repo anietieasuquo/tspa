@@ -12,6 +12,8 @@ import { createDefaultInternalLogger } from '@main/utils/logger-utils';
 
 const ENVIRONMENT =
   process.env.TSPA_ENVIRONMENT === 'dev' ? 'tspa-dev' : 'tspa';
+const FIRESTORE_EMULATOR_HOST =
+  process.env.FIRESTORE_EMULATOR_HOST ?? 'localhost:8095';
 const logger: Logger = createDefaultInternalLogger();
 
 class FirestoreProvider {
@@ -22,7 +24,8 @@ class FirestoreProvider {
   private constructor(
     firebaseConnectionProperties: FirestoreConnectionProperties
   ) {
-    const { apiKey, authDomain, projectId } = firebaseConnectionProperties;
+    const { apiKey, authDomain, projectId, emulatorEndpoint } =
+      firebaseConnectionProperties;
     if (isAnyEmpty(apiKey, authDomain, projectId)) {
       throw new InternalServerException(
         'Firebase credentials not set for provider'
@@ -34,16 +37,18 @@ class FirestoreProvider {
     this.auth = getAuth(app);
 
     if (ENVIRONMENT === 'tspa-dev') {
-      logger.debug('Connecting to Firestore emulator at localhost:8095');
-      connectFirestoreEmulator(this.firestore, 'localhost', 8095);
+      const emulatorUrl = emulatorEndpoint ?? FIRESTORE_EMULATOR_HOST;
+      logger.debug('Connecting to Firestore emulator at', emulatorUrl);
+      const firestoreEmulatorHost = emulatorUrl.split(':')[0];
+      const firestoreEmulatorPort = parseInt(emulatorUrl.split(':')[1]);
+      connectFirestoreEmulator(
+        this.firestore,
+        firestoreEmulatorHost,
+        firestoreEmulatorPort
+      );
     }
 
-    if (
-      !this.firestore ||
-      !this.firestore.app ||
-      !this.auth ||
-      !this.auth.app
-    ) {
+    if (!this.firestore?.app || !this.auth?.app) {
       throw new InternalServerException(
         'Failed to initialize Firestore provider'
       );
@@ -54,7 +59,7 @@ class FirestoreProvider {
     firebaseConnectionProperties: FirestoreConnectionProperties
   ): FirestoreProvider {
     return (
-      this.instance || (this.instance = new this(firebaseConnectionProperties))
+      this.instance ?? (this.instance = new this(firebaseConnectionProperties))
     );
   }
 }

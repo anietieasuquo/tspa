@@ -23,7 +23,7 @@
       "error",
       "unix"
     ],
-    "@typescript-eslint/ban-ts-comment": "warn",
+    "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/no-namespace": "warn",
     "@typescript-eslint/no-explicit-any": "off",
