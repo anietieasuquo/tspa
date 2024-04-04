@@ -35,20 +35,20 @@ const createModel = <T extends Entity>(
   collectionName: string
 ): Model<T> => {
   logger.debug(`Creating model for collection: ${collectionName} =>`, entity);
-  return model<T>(collectionName, createEntitySchema<T>(entity)) as Model<T>;
+  return model<T>(collectionName, createEntitySchema<T>(entity));
 };
 
 const createOrGetEntityModel = <T extends Entity>(
   entity: Partial<T>,
   collectionName: string
 ): Model<T> => {
-  const model = mongoose.models[collectionName] as Model<T> | undefined;
-  if (model) {
+  const entityModel = mongoose.models[collectionName] as Model<T> | undefined;
+  if (entityModel) {
     logger.debug(
       `Existing model for collection: ${collectionName}, entity: ${JSON.stringify(entity)}, model =>`,
-      model.schema.obj
+      entityModel.schema.obj
     );
-    return model;
+    return entityModel;
   }
 
   const newModel = createModel<T>(entity, collectionName);

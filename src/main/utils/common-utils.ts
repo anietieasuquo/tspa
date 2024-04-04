@@ -1,3 +1,5 @@
+import { Nullable } from '@main/types/core';
+
 const isNoneEmpty = (...args: any[]): boolean => {
   if (!args || args.length === 0) {
     return false;
@@ -29,7 +31,7 @@ const isAnyTextual = (...args: any[]): boolean => {
   if (!args) {
     return true;
   }
-  const numberRegularExpression = /^[0-9]+$/;
+  const numberRegularExpression = /^\d+$/;
   for (const arg of args) {
     if (
       arg === undefined ||
@@ -47,7 +49,7 @@ const isNumeric = (input: any): boolean => {
   return !isNaN(parseFloat(input)) && isFinite(input);
 };
 
-const firstNonNull = (...args: any[]): any | null => {
+const firstNonNull = (...args: any[]): Nullable<any> => {
   for (const arg of args) {
     if (isNoneEmpty(arg)) {
       return arg;
@@ -67,9 +69,7 @@ const stringOrEmpty = (value?: string): string => {
 const generate = (): string => {
   let sysTime = new Date().getTime();
   let perfTime =
-    (typeof performance !== 'undefined' &&
-      performance.now &&
-      performance.now() * 1000) ||
+    (typeof performance !== 'undefined' && (performance?.now() || 0) * 1000) ||
     0;
 
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -90,18 +90,18 @@ const generateNumber = (): number => {
 };
 
 const generateBase64 = (data: string): string => {
-  return new Buffer(data).toString('base64');
+  return btoa(data);
 };
 
-const limit = (arg: string, limit: number = 40): string => {
+const limit = (arg: string, max: number = 40): string => {
   if (isAnyEmpty(arg)) {
     return 'Anonymous';
   }
-  if (arg.length <= limit) {
+  if (arg.length <= max) {
     return arg;
   }
 
-  return arg.substring(0, limit - 3).concat('...');
+  return arg.substring(0, max - 3).concat('...');
 };
 
 const millisecondsToMinutes = (milliseconds: number): number => {
@@ -135,7 +135,7 @@ const addDaysToTimestamp = (timestamp: number, days: number): number => {
 };
 
 const createPaddedHex = (id?: number): string => {
-  return (id || Date.now() + generateNumber()).toString().padStart(64, '0');
+  return (id ?? Date.now() + generateNumber()).toString().padStart(64, '0');
 };
 
 const ipfsToUrl = (rawUrl: string): string => {
@@ -185,10 +185,10 @@ const dateTimeFormat = (time: number | Date): string => {
 
 const mapErrorMessage = (error: any): string => {
   if (error) {
-    if (error.response && error.response.data && error.response.data.message) {
+    if (error?.response?.data?.message) {
       return error.response.data.message;
     }
-    if (error.response && error.response.data) {
+    if (error?.response?.data) {
       return error.response.data;
     }
   }
@@ -205,7 +205,7 @@ const secondsFromToday = (date: Date | number): number => {
 };
 
 const sanitize = (input: string): string => {
-  return input.replace(/['";\(\)]/g, '').trim();
+  return input.replace(/['";()]/g, '').trim();
 };
 
 const isSafe = (input: any): boolean => {
@@ -236,16 +236,16 @@ const isSafe = (input: any): boolean => {
     /\$near/i,
     /\$nearSphere/i,
     /<script>/i,
-    /['";\(\)]/i
+    /['";()]/i
   ];
 
   if (typeof input === 'string') {
-    return !dangerousPatterns.some((pattern) => input.match(pattern));
+    return !dangerousPatterns.some((pattern) => pattern.exec(input));
   }
   if (Array.isArray(input)) {
     return input.every((item) => {
       if (typeof item === 'string') {
-        return !dangerousPatterns.some((pattern) => item.match(pattern));
+        return !dangerousPatterns.some((pattern) => pattern.exec(item));
       }
       return true;
     });
@@ -253,12 +253,12 @@ const isSafe = (input: any): boolean => {
   if (typeof input === 'object') {
     return Object.keys(input).every((key) => {
       if (typeof input[key] === 'string') {
-        return !dangerousPatterns.some((pattern) => input[key].match(pattern));
+        return !dangerousPatterns.some((pattern) => pattern.exec(input[key]));
       }
       return true;
     });
   }
-  return !input.match(/['";\(\)]/);
+  return !/['";()]/.exec(input);
 };
 
 export {

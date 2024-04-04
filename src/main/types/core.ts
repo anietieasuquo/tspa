@@ -49,7 +49,7 @@ export interface QueryOptions<T extends Entity> {
   offset?: number;
   sortBy?: { [key in keyof T]: SortOrder };
   locking?: Locking;
-  mongoOptions?: MongoQueryOptions | undefined;
+  mongoOptions?: MongoQueryOptions;
 }
 
 export interface EntityWithAdditionalId extends Entity {
@@ -108,6 +108,8 @@ export interface CrudRepository<T extends Entity> {
   ): Promise<boolean>;
 
   createId(): string;
+
+  getDatabase(): any;
 }
 
 export type MongoSession = mongoose.mongo.ClientSession;
@@ -158,6 +160,7 @@ export interface FirestoreConnectionProperties extends ConnectionProperties {
   apiKey?: string;
   authDomain?: string;
   projectId?: string;
+  emulatorEndpoint?: string;
 }
 
 export interface MongoConnectionProperties<T extends EntityWithAdditionalId>
@@ -170,3 +173,5 @@ export interface MongoConnectionProperties<T extends EntityWithAdditionalId>
 export interface LocalStorageConnectionProperties extends ConnectionProperties {
   storagePath?: string;
 }
+
+export type Nullable<T> = T | null | undefined;

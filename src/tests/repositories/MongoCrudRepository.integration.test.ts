@@ -1,19 +1,15 @@
-import { DockerComposeEnvironment, PullPolicy, StartedDockerComposeEnvironment, Wait } from 'testcontainers';
-import { commonUtils, logger, LogicalOperator, MongoCrudRepository, MongoSession, Optional } from '../../main';
+import { MongoDBContainer, StartedMongoDBContainer } from '@testcontainers/mongodb';
+import mongoose from 'mongoose';
+import { commonUtils, LogicalOperator, MongoCrudRepository, MongoSession, Optional } from '../../main';
 import { User } from '../types/test';
 import { DuplicateRecordException } from '../../main/exceptions/DuplicateRecordException';
-import { StartedGenericContainer } from 'testcontainers/build/generic-container/started-generic-container';
-import mongoose from 'mongoose';
 import { InvalidRequestException } from '../../main/exceptions/InvalidRequestException';
 import { RecordNotFoundException } from '../../main/exceptions/RecordNotFoundException';
 import { OptimisticLockException } from '../../main/exceptions/OptimisticLockException';
 
 describe('MongoCrudRepository Integration Tests', () => {
-  let environment: StartedDockerComposeEnvironment;
   let mongoCrudRepository: MongoCrudRepository<User>;
-  let container: StartedGenericContainer;
-  const mongoService = 'mongodb';
-  const setupService = 'mongo-setup';
+  let container: StartedMongoDBContainer;
 
   const user: User = {
     deleted: false,
@@ -23,28 +19,17 @@ describe('MongoCrudRepository Integration Tests', () => {
   };
 
   beforeAll(async () => {
-    environment = await new DockerComposeEnvironment('./docker', 'docker-compose.yml')
-      .withBuild()
-      .withPullPolicy(PullPolicy.alwaysPull())
-      .withWaitStrategy(mongoService, Wait.forListeningPorts())
-      .withWaitStrategy(setupService, Wait.forListeningPorts())
-      .withEnvironment({ DEBUG: 'testcontainers:containers' })
-      .up([mongoService, setupService]);
-
-    container = environment.getContainer(mongoService);
+    container = await new MongoDBContainer('mongo:7.0-jammy').start();
     const host = container.getHost();
     const port = container.getFirstMappedPort();
-    logger.info(`Mongodb container is running on: ${host}:${port}`);
     const appName = 'tspa';
-    const uri = `mongodb://${host}:${port}/${appName}?authSource=admin&replicaSet=tspa-rs`;
+    const uri = `mongodb://${host}:${port}/${appName}?authSource=admin&replicaSet=rs0&directConnection=true&ssl=false`;
     mongoCrudRepository = MongoCrudRepository.initFor<User>('user', { entities: [{ user }], uri, appName });
   });
 
   afterAll(async () => {
     await mongoose.disconnect();
     await container.stop();
-    await environment.stop();
-    await environment.down();
   });
 
   beforeEach(async () => {

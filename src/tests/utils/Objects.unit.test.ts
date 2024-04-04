@@ -1,4 +1,4 @@
-import { Objects } from '../../main';
+import { logger, Objects } from '../../main';
 
 describe('Object.requireNonEmpty Unit Test', () => {
   const check = (input1: any, input2: any, input3: any): boolean => {
@@ -6,6 +6,7 @@ describe('Object.requireNonEmpty Unit Test', () => {
       Objects.requireNonEmpty([input1, input2, input3], new Error('Invalid input'));
       return false;
     } catch (e: any) {
+      logger.error('An error occurred in Objects unit test: ', e);
       return true;
     }
   };

@@ -20,11 +20,15 @@ const sort = <T extends Entity>(
 };
 
 const unique = <T extends Entity>(list: T[], keys?: (keyof T)[]): T[] => {
-  if (list.length === 0) return list;
-  const _keys: (keyof T)[] = keys || ['id'];
+  if (list.length === 0) {
+    return list;
+  }
+  const _keys: (keyof T)[] = keys ?? ['id'];
   const map: { [key: string]: T } = {};
   const getKey = (key: keyof T, item: T): any => {
-    if (item[key]) return item[key];
+    if (item[key]) {
+      return item[key];
+    }
     return commonUtils.generate();
   };
 
@@ -41,8 +45,8 @@ const addToMap = <T extends Entity>(
   key: string,
   sortOrder: SortOrder = SortOrder.DESC
 ): EntityMap<T> => {
-  const _map: EntityMap<T> = map || {};
-  const list: T[] = _map[key] || [];
+  const _map: EntityMap<T> = map ?? {};
+  const list: T[] = _map[key] ?? [];
   const index = list.findIndex((i: T) => i.id === item.id);
   if (index !== -1) {
     list.splice(index, 1);
@@ -57,9 +61,9 @@ const combineMap = <T extends Entity>(
   key: string,
   sortOrder: SortOrder = SortOrder.DESC
 ): EntityMap<T> => {
-  const _map: EntityMap<T> = base || {};
+  const _map: EntityMap<T> = base ?? {};
   second.forEach((item: T) => {
-    const _list: T[] = _map[key] || [];
+    const _list: T[] = _map[key] ?? [];
     const index = _list.findIndex((i: T) => i.id === item.id);
     if (index !== -1) {
       _list.splice(index, 1);
@@ -119,7 +123,7 @@ const updatePayload = <T extends Entity>(payload: Partial<T>): void => {
     ? Date.now()
     : payload.dateCreated;
   payload.dateUpdated = Date.now();
-  payload.deleted = payload.deleted || false;
+  payload.deleted = payload.deleted ?? false;
 };
 
 export {
