@@ -35,6 +35,7 @@
     "test:integration": "export $(cat .env | xargs) && jest integration --testTimeout=100000000",
     "test:integration:ci": "TSPA_LOG_LEVEL=trace TSPA_ENVIRONMENT=dev DEBUG=testcontainers:containers jest integration --testTimeout=100000000",
     "test:integration:firestore": "export $(cat .env | xargs) && jest -t \"FirestoreCrudRepository Integration Tests\"  --testTimeout=100000000 --detectOpenHandles",
+    "test:integration:mongodb": "export $(cat .env | xargs) && jest -t \"MongoCrudRepository Integration Tests\"  --testTimeout=100000000 --detectOpenHandles",
     "test:smoke": "TSPA_LOG_LEVEL=trace TSPA_ENVIRONMENT=dev DEBUG=testcontainers:containers jest smoke  --testTimeout=100000000",
     "test": "TSPA_LOG_LEVEL=trace DEBUG=testcontainers:containers TSPA_ENVIRONMENT=dev jest --testTimeout=100000000 --coverage",
     "lint:eslint:ci": "yarn run eslint src/main --max-warnings=0 --ext .ts --ext .js",
@@ -68,6 +69,7 @@
   "homepage": "https://github.com/anietieasuquo/tspa#readme",
   "devDependencies": {
     "@testcontainers/gcloud": "10.8.0",
+    "@testcontainers/mongodb": "^10.8.1",
     "@types/callsite": "1.0.34",
     "@types/firebase": "3.2.1",
     "@types/jest": "29.5.12",

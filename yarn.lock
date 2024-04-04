@@ -1106,6 +1106,13 @@
   dependencies:
     testcontainers "^10.7.2"
 
+"@testcontainers/mongodb@^10.8.1":
+  version "10.8.1"
+  resolved "https://registry.yarnpkg.com/@testcontainers/mongodb/-/mongodb-10.8.1.tgz#47f3e6cd720d4f64f06478e785987b802a364e52"
+  integrity sha512-2ehoZ+AbyrEysIlD1NmTDpe2jTyVP9uXdUdybLGlGd9t/p5pZ/77hULACaCCv+R23cKJE5NTirAB2/9Cphb5dw==
+  dependencies:
+    testcontainers "^10.8.1"
+
 "@types/babel__core@^7.1.14":
   version "7.20.5"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.5.tgz#3df15f27ba85319caa07ba08d0721889bb39c017"
@@ -4491,6 +4498,27 @@ testcontainers@10.8.0, testcontainers@^10.7.2:
   version "10.8.0"
   resolved "https://registry.yarnpkg.com/testcontainers/-/testcontainers-10.8.0.tgz#3547d678c2d2078e736c45d325a3b26b7f2c93da"
   integrity sha512-C8wXze2go5NVQyzYtI8XhTJ+iVvpojuyTiG1AWIRE1C8vojCx9Za3tQ5qEx/43WWgVGYE9UVz2Qo0u9IvLE3Hw==
+  dependencies:
+    "@balena/dockerignore" "^1.0.2"
+    "@types/dockerode" "^3.3.24"
+    archiver "^5.3.2"
+    async-lock "^1.4.1"
+    byline "^5.0.0"
+    debug "^4.3.4"
+    docker-compose "^0.24.6"
+    dockerode "^3.3.5"
+    get-port "^5.1.1"
+    node-fetch "^2.7.0"
+    proper-lockfile "^4.1.2"
+    properties-reader "^2.3.0"
+    ssh-remote-port-forward "^1.0.4"
+    tar-fs "^3.0.5"
+    tmp "^0.2.1"
+
+testcontainers@^10.8.1:
+  version "10.8.1"
+  resolved "https://registry.yarnpkg.com/testcontainers/-/testcontainers-10.8.1.tgz#46a38dfb4d98b030ac8b0781b04cca150510fd84"
+  integrity sha512-2Kzeu3UfnILkhpdz2+YDu1FBFerAusdMCsltErBCJouP5j5xuxrV8BHxhlDt0xsJdM8YnhHgA2B32LmDr5AToA==
   dependencies:
     "@balena/dockerignore" "^1.0.2"
     "@types/dockerode" "^3.3.24"

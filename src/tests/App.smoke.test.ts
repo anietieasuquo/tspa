@@ -1,4 +1,5 @@
 import { FirestoreEmulatorContainer, StartedFirestoreEmulatorContainer } from '@testcontainers/gcloud';
+import { MongoDBContainer, StartedMongoDBContainer } from '@testcontainers/mongodb';
 import {
   CrudRepository,
   FirestoreCrudRepository,
@@ -8,21 +9,13 @@ import {
   Optional
 } from '../main';
 import { User } from './types/test';
-import { DockerComposeEnvironment, PullPolicy, StartedDockerComposeEnvironment, Wait } from 'testcontainers';
-import { StartedGenericContainer } from 'testcontainers/build/generic-container/started-generic-container';
 import mongoose from 'mongoose';
 
 describe('Smoke Test', () => {
   jest.setTimeout(100000000);
   const projectId = 'typescript-persistence-api';
   let firestoreEmulatorContainer: StartedFirestoreEmulatorContainer;
-  let localStorageCrudRepository: LocalStorageCrudRepository<User>;
-  let firestoreCrudRepository: FirestoreCrudRepository<User>;
-  let mongoEnvironment: StartedDockerComposeEnvironment;
-  let mongoContainer: StartedGenericContainer;
-  const mongoService = 'mongodb';
-  const setupService = 'mongo-setup';
-  let mongoCrudRepository: MongoCrudRepository<User>;
+  let mongoContainer: StartedMongoDBContainer;
   const firestoreName = 'firestore';
   const mongoName = 'mongo';
   const localStorageName = 'localStorage';
@@ -34,44 +27,10 @@ describe('Smoke Test', () => {
     email: 'johndoe@gmail.com'
   };
 
-  beforeAll(async () => {
-    firestoreEmulatorContainer = await new FirestoreEmulatorContainer().start();
-    localStorageCrudRepository = await LocalStorageCrudRepository.initFor<User>('user', {
-      appName: 'tspa',
-      storagePath: './db'
-    });
-
-    firestoreCrudRepository = FirestoreCrudRepository.initFor<User>('user', {
-      apiKey: 'apiKey',
-      authDomain: 'authDomain',
-      projectId,
-      appName: projectId,
-      emulatorEndpoint: firestoreEmulatorContainer.getEmulatorEndpoint()
-    });
-
-    mongoEnvironment = await new DockerComposeEnvironment('./docker', 'docker-compose.yml')
-      .withBuild()
-      .withPullPolicy(PullPolicy.alwaysPull())
-      .withWaitStrategy(mongoService, Wait.forListeningPorts())
-      .withWaitStrategy(setupService, Wait.forListeningPorts())
-      .withEnvironment({ DEBUG: 'testcontainers:containers' })
-      .up([mongoService, setupService]);
-
-    mongoContainer = mongoEnvironment.getContainer(mongoService);
-    const host = mongoContainer.getHost();
-    const port = mongoContainer.getFirstMappedPort();
-    logger.info(`Smoke test > Mongodb container is running on: ${host}:${port}`);
-    const appName = 'tspa';
-    const uri = `mongodb://${host}:${port}/${appName}?authSource=admin&replicaSet=tspa-rs&directConnection=true&ssl=false`;
-    mongoCrudRepository = MongoCrudRepository.initFor<User>('user', { entities: [{ user }], uri, appName });
-  });
-
   afterAll(async () => {
     await firestoreEmulatorContainer.stop();
     await mongoose.disconnect();
     await mongoContainer.stop();
-    await mongoEnvironment.stop();
-    await mongoEnvironment.down();
   });
 
   const check = async (repository: CrudRepository<User>): Promise<boolean> => {
@@ -104,14 +63,42 @@ describe('Smoke Test', () => {
     }
   };
 
-  const getRepositoryByName = (name: string): CrudRepository<User> => {
+  const getMongoRepository = async (): Promise<CrudRepository<User>> => {
+    mongoContainer = await new MongoDBContainer('mongo:7.0-jammy').start();
+    const host = mongoContainer.getHost();
+    const port = mongoContainer.getFirstMappedPort();
+    logger.info(`Smoke test > Mongodb container is running on: ${host}:${port}`);
+    const appName = 'tspa';
+    const uri = `mongodb://${host}:${port}/${appName}?authSource=admin&replicaSet=rs0&directConnection=true&ssl=false`;
+    return MongoCrudRepository.initFor<User>('user', { entities: [{ user }], uri, appName });
+  };
+
+  const getFirestoreRepository = async (): Promise<CrudRepository<User>> => {
+    firestoreEmulatorContainer = await new FirestoreEmulatorContainer().start();
+    return FirestoreCrudRepository.initFor<User>('user', {
+      apiKey: 'apiKey',
+      authDomain: 'authDomain',
+      projectId,
+      appName: projectId,
+      emulatorEndpoint: firestoreEmulatorContainer.getEmulatorEndpoint()
+    });
+  };
+
+  const getLocalStorageRepository = async (): Promise<CrudRepository<User>> => {
+    return LocalStorageCrudRepository.initFor<User>('user', {
+      appName: 'tspa',
+      storagePath: './db'
+    });
+  };
+
+  const getRepositoryByName = (name: string): Promise<CrudRepository<User>> => {
     switch (name) {
       case localStorageName:
-        return localStorageCrudRepository;
+        return getLocalStorageRepository();
       case firestoreName:
-        return firestoreCrudRepository;
+        return getFirestoreRepository();
       case mongoName:
-        return mongoCrudRepository;
+        return getMongoRepository();
       default:
         throw new Error('Invalid repository name');
     }
@@ -126,11 +113,11 @@ describe('Smoke Test', () => {
                                                                                                  name,
                                                                                                  result
                                                                                                }: {
-    getter: (name: string) => CrudRepository<User>,
+    getter: (name: string) => Promise<CrudRepository<User>>,
     name: string,
     result: boolean
   }) => {
-    const repository: CrudRepository<User> = getter(name);
+    const repository: CrudRepository<User> = await getter(name);
     expect(await check(repository)).toBe(result);
   });
 });
