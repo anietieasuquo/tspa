@@ -43,7 +43,7 @@ jobs:
       - name: Build packages
         run: |
           yarn run clean:install:ci
-          yarn run build -ws
+          yarn run build:ci
 
       - name: Git commit and push
         run: |

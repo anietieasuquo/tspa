@@ -39,8 +39,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: yarn run clean:install:ci
-      - name: Build workspaces
-        run: yarn run build -ws
       - name: Run smoke test
         run: yarn run test:smoke
 
@@ -61,8 +59,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: yarn run clean:install:ci
-      - name: Build workspaces
-        run: yarn run build -ws
       - name: Run unit test
         run: yarn run test:unit
 
