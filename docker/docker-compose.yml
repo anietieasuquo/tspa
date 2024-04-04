@@ -18,4 +18,4 @@ services:
     depends_on:
       - mongodb
     restart: "no"
-    entrypoint: [ "bash", "-c", "sleep 10 && mongosh --host localhost:27017 --eval \"rs.initiate({ '_id': 'tspa-rs', 'version': 1, 'members': [{ '_id': 1, 'host': 'localhost:27017' }] }, { force: true })\" && echo 'Done with replica-set initialization'" ]
+    entrypoint: [ "bash", "-c", "sleep 10 && mongosh --host 0.0.0.0:27017 --eval \"rs.initiate({ '_id': 'tspa-rs', 'version': 1, 'members': [{ '_id': 1, 'host': '0.0.0.0:27017' }] }, { force: true })\" && echo 'Done with replica-set initialization'" ]
