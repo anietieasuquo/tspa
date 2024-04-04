@@ -62,7 +62,7 @@ describe('Smoke Test', () => {
     const port = mongoContainer.getFirstMappedPort();
     logger.info(`Smoke test > Mongodb container is running on: ${host}:${port}`);
     const appName = 'tspa';
-    const uri = `mongodb://${host}:${port}/${appName}?authSource=admin&replicaSet=tspa-rs`;
+    const uri = `mongodb://${host}:${port}/${appName}?authSource=admin&replicaSet=tspa-rs&directConnection=true&ssl=false`;
     mongoCrudRepository = MongoCrudRepository.initFor<User>('user', { entities: [{ user }], uri, appName });
   });
 
