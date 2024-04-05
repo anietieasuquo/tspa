@@ -10,7 +10,7 @@ on:
 
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }}) - ${{ matrix.build-mode }}
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-22.04
     timeout-minutes: 360
     permissions:
@@ -20,9 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - language: javascript-typescript
-            build-mode: none
+        language: [ 'javascript-typescript' ]
 
     steps:
       - name: Checkout repository
@@ -31,7 +29,6 @@ jobs:
         uses: github/codeql-action/init@v2
         with:
           languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
       - name: Autobuild
         uses: github/codeql-action/autobuild@v2
       - name: Perform CodeQL Analysis

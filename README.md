@@ -216,8 +216,7 @@ which is from `TransactionalCrudRepository` which at the moment is only supporte
 
 ## TESTS
 
-To run tests, ensure you have docker installed, and also ensure you have firebase emulator running, then update
-your `/etc/hosts` file with the following:
+To run tests, ensure you have docker installed, and also you may have to update your `/etc/hosts` file with the following:
 
 ```sh
 127.0.0.1 mongodb
@@ -226,7 +225,7 @@ your `/etc/hosts` file with the following:
 Then run the following command:
 
 ```sh
-yarn run test:all
+yarn test
 ```
 
 ## Examples

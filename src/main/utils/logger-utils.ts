@@ -4,9 +4,9 @@ import { LogLevel } from '@main/utils/LogLevel';
 import { dateTimeFormat } from '@main/utils/common-utils';
 import { CallerProperties, LoggerConfig } from '@main/types/utils';
 
-const APPLICATION_LOG_LEVEL = process.env.TSPA_LOG_LEVEL || 'info';
-const INTERNAL_LOG_LEVEL = process.env.TSPA_INTERNAL_LOG_LEVEL || 'debug';
-const APP_NAME = process.env.TSPA_APP_NAME || 'app';
+const APPLICATION_LOG_LEVEL = process.env.TSPA_LOG_LEVEL ?? 'info';
+const INTERNAL_LOG_LEVEL = process.env.TSPA_INTERNAL_LOG_LEVEL ?? 'debug';
+const APP_NAME = process.env.TSPA_APP_NAME ?? 'app';
 const appName = 'TSPA';
 
 const createDefaultInternalLogger = (): Logger => {
@@ -24,7 +24,7 @@ const getCaller = (showStack: boolean = false): string => {
     const path = stack.getFileName();
     const line = stack.getLineNumber();
     const column = stack.getColumnNumber();
-    const method = stack.getMethodName() || 'anonymous';
+    const method = stack.getMethodName() ?? 'anonymous';
 
     return {
       path,

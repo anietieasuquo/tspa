@@ -12,7 +12,7 @@ class LocalStorageProvider {
   }
 
   public static getInstance(path: string): LocalStorageProvider {
-    return this.instance || (this.instance = new this(path));
+    return this.instance ?? (this.instance = new this(path));
   }
 }
 

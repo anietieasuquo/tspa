@@ -1,0 +1,84 @@
+name: Test
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.head_ref || github.sha }}"
+  cancel-in-progress: true
+
+jobs:
+  smoke-test:
+    name: Smoke test
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        node-version: [ 21.x ]
+        runner: [ ubuntu-22.04 ]
+        container-runtime: [ docker, docker-rootless, podman ]
+        include:
+          - container-runtime: docker
+            runner: ubuntu-22.04
+          - container-runtime: docker-rootless
+            runner: ubuntu-22.04
+          - container-runtime: podman
+            runner: ubuntu-22.04
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+      - name: Install NodeJS ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn run clean:install:ci
+      - name: Run smoke test
+        run: yarn run test:smoke
+
+  unit-test:
+    name: Unit test
+    needs: smoke-test
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        node-version: [ 21.x ]
+        runner: [ ubuntu-22.04 ]
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v3
+      - name: Install NodeJS ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn run clean:install:ci
+      - name: Run unit test
+        run: yarn run test:unit
+
+  integration-test:
+    name: Integration test
+    needs: smoke-test
+    strategy:
+      matrix:
+        node-version: [ 21.x ]
+        container-runtime: [ docker, docker-rootless, podman ]
+        include:
+          - container-runtime: docker
+            runner: ubuntu-22.04
+          - container-runtime: docker-rootless
+            runner: ubuntu-22.04
+          - container-runtime: podman
+            runner: ubuntu-22.04
+    uses: ./.github/workflows/test-template.yml
+    with:
+      runner: ${{ matrix.runner }}
+      node-version: ${{ matrix.node-version }}
+      container-runtime: ${{ matrix.container-runtime }}
+      workspace: ./
