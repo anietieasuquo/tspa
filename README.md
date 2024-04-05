@@ -4,6 +4,9 @@
   <a href="https://www.npmjs.com/package/tspa" target="_blank">
     <img alt="Version" src="https://img.shields.io/npm/v/tspa.svg">
   </a>
+  <a href="https://github.com/anietieasuquo/tspa/actions/workflows/test.yml" target="_blank">
+    <img alt="Test" src="https://github.com/anietieasuquo/tspa/actions/workflows/test.yml/badge.svg?branch=main" />
+  </a>
   <a href="https://github.com/anietieasuquo/tspa#readme" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -216,7 +219,8 @@ which is from `TransactionalCrudRepository` which at the moment is only supporte
 
 ## TESTS
 
-To run tests, ensure you have docker installed, and also you may have to update your `/etc/hosts` file with the following:
+To run tests, ensure you have docker installed, and also you may have to update your `/etc/hosts` file with the
+following:
 
 ```sh
 127.0.0.1 mongodb
@@ -229,8 +233,10 @@ yarn test
 ```
 
 ## Examples
-- [Vending Machine](https://github.com/anietieasuquo/vending-machine): A simple vending machine backend application built with TSPA, NodeJS, Express, supporting OAuth2 authentication/authorization, and also transactional sessions with TSPA's `TransactionalCrudRepository` for MongoDB.
 
+- [Vending Machine](https://github.com/anietieasuquo/vending-machine): A simple vending machine backend application
+  built with TSPA, NodeJS, Express, supporting OAuth2 authentication/authorization, and also transactional sessions with
+  TSPA's `TransactionalCrudRepository` for MongoDB.
 
 ## Author
 
